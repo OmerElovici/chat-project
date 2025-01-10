@@ -76,7 +76,7 @@ class ChatServer:
             )
 
         except (ConnectionResetError, BrokenPipeError):
-            print(f" >> Client {client_address} disconnected during username setup.")
+            print(f" >> Client {client_address} disconnected during username setup")
             self.remove_client(client_socket)
 
     def handle_client_message(self, client_socket):
