@@ -65,11 +65,11 @@ class ChatServer:
                     return
 
             self.clients[client_socket] = username
-            print(f" -- {username} has joined the chat room")
+            print(f" >> {username} has joined the chat room")
             self.broadcast(f"{username} has joined the chat!", client_socket)
 
         except (ConnectionResetError, BrokenPipeError):
-            print(f" -- Client {client_address} disconnected during username setup.")
+            print(f" >> Client {client_address} disconnected during username setup.")
             self.remove_client(client_socket)
 
     def handle_client_message(self, client_socket):
@@ -86,10 +86,9 @@ class ChatServer:
                 elif message.lower().startswith("/users"):
                     connected_clients = self.clients.values()
                     separator = ":"
-                    response = separator.join(map(str, connected_clients))
-                    print(f" -- '{user}' asked for user list ( {response} )")
+                    response = "++" + separator.join(map(str, connected_clients))
+                    print(f" >> '{user}' asked for user list ( {response} )")
                     client_socket.send(response.encode())
-
                 else:
                     print(f" >> {user} sent: {message}")
                     self.broadcast(
@@ -99,7 +98,7 @@ class ChatServer:
                 self.remove_client(client_socket)
         except (ConnectionResetError, BrokenPipeError):
             print(
-                f" -- Client {self.clients.get(client_socket, 'unknown')} disconnected abruptly."
+                f" >> Client {self.clients.get(client_socket, 'unknown')} disconnected abruptly."
             )
             self.remove_client(client_socket)
 
@@ -116,17 +115,15 @@ class ChatServer:
                     break
 
             if recipient_socket:
-                print(f" ~~> dm from {self.clients[sender_socket]}): {message}")
+                print(f" >> dm from {self.clients[sender_socket]}): {message}")
                 recipient_socket.send(
                     f"(-- Recieved direct message from {self.clients[sender_socket]}): {message}".encode()
                 )
             else:
-                sender_socket.send(
-                    f" -- User '{recipient_username}' not found.".encode()
-                )
+                sender_socket.send(f"User '{recipient_username}' not found.".encode())
         except IndexError:
             sender_socket.send(
-                "Invalid private message format. Use /dm <username> <message>".encode()
+                "!! Invalid private message format. Use /dm <username> <message>".encode()
             )
 
     def broadcast(self, message, sender_socket):
@@ -141,8 +138,8 @@ class ChatServer:
     def remove_client(self, client_socket):
         if client_socket in self.clients:
             username = self.clients[client_socket]
-            print(f" -- {username} has left the chat.")
-            self.broadcast(f"{username} has left the chat.", client_socket)
+            print(f" >> {username} has left the chat.")
+            self.broadcast(f"!! {username} has left the chat.", client_socket)
             del self.clients[client_socket]
         if client_socket in self.input_list:
             self.input_list.remove(client_socket)
