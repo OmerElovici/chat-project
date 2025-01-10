@@ -5,6 +5,12 @@ import sys
 
 
 class ChatServer:
+
+    msg_prefix = "--"
+    error_prefix = "!!"
+    info_prefix = "ii"
+    user_list_prefix = "++"
+
     def __init__(self, host="127.0.0.1", port=8080, max_clients=5):
         self.host = host
         self.port = port
@@ -13,7 +19,7 @@ class ChatServer:
         self.clients = (
             {}
         )  # Dictionary to store client sockets and usernames -- TODO: use db later
-        self.input_list = []  # -- TODO: check what does this mean
+        self.input_list = []
 
     def start(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,7 +63,7 @@ class ChatServer:
 
             while username in self.clients.values():
                 client_socket.send(
-                    "!! Username already taken. Please choose another: ".encode()
+                    f"{self.error_prefix} Username already taken. Please choose another: ".encode()
                 )
                 username = client_socket.recv(1024).decode().strip()
                 if not username:
@@ -66,7 +72,9 @@ class ChatServer:
 
             self.clients[client_socket] = username
             print(f" >> {username} has joined the chat room")
-            self.broadcast(f"{username} has joined the chat!", client_socket)
+            self.broadcast(
+                f"{info_prefix} {username} has joined the chat!", client_socket
+            )
 
         except (ConnectionResetError, BrokenPipeError):
             print(f" >> Client {client_address} disconnected during username setup.")
@@ -86,7 +94,9 @@ class ChatServer:
                 elif message.lower().startswith("/users"):
                     connected_clients = self.clients.values()
                     separator = ":"
-                    response = "++" + separator.join(map(str, connected_clients))
+                    response = self.user_list_prefix + separator.join(
+                        map(str, connected_clients)
+                    )
                     print(f" >> '{user}' asked for user list ( {response} )")
                     client_socket.send(response.encode())
             else:
@@ -114,11 +124,11 @@ class ChatServer:
                     f" >> dm from {self.clients[sender_socket]} to {self.clients[recipient_socket]}: {message}"
                 )
                 recipient_socket.send(
-                    f"-- Recieved direct message from {self.clients[sender_socket]}: {message}".encode()
+                    f"{self.msg_prefix} Recieved direct message from {self.clients[sender_socket]}: {message}".encode()
                 )
             else:
                 sender_socket.send(
-                    f"!! User '{recipient_username}' not found.".encode()
+                    f"{error_prefix} User '{recipient_username}' not found.".encode()
                 )
         except IndexError:
             sender_socket.send(
@@ -138,14 +148,16 @@ class ChatServer:
         if client_socket in self.clients:
             username = self.clients[client_socket]
             print(f" >> {username} has left the chat.")
-            self.broadcast(f"!! {username} has left the chat.", client_socket)
+            self.broadcast(
+                f"{info_prefix} {username} has left the chat.", client_socket
+            )
             del self.clients[client_socket]
         if client_socket in self.input_list:
             self.input_list.remove(client_socket)
             client_socket.close()
 
     def shutdown(self):
-        self.broadcast("!! Server is shutting down.", None)
+        self.broadcast(f"{error_prefix} Server is shutting down.", None)
         for client_socket in self.clients:
             client_socket.close()
         self.server_socket.close()
