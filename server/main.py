@@ -114,7 +114,7 @@ class ChatServer:
                     f" >> dm from {self.clients[sender_socket]} to {self.clients[recipient_socket]}: {message}"
                 )
                 recipient_socket.send(
-                    f"(-- Recieved direct message from {self.clients[sender_socket]}): {message}".encode()
+                    f"-- Recieved direct message from {self.clients[sender_socket]}: {message}".encode()
                 )
             else:
                 sender_socket.send(
