@@ -72,7 +72,7 @@ class ChatServer:
             self.clients[client_socket] = username
             print(f" >> {username} has joined the chat room")
             self.broadcast(
-                f"{info_prefix} {username} has joined the chat!", client_socket
+                f"{self.info_prefix} {username} has joined the chat!", client_socket
             )
 
         except (ConnectionResetError, BrokenPipeError):
@@ -127,7 +127,7 @@ class ChatServer:
                 )
             else:
                 sender_socket.send(
-                    f"{error_prefix} User '{recipient_username}' not found.".encode()
+                    f"{self.error_prefix} User '{recipient_username}' not found.".encode()
                 )
         except IndexError:
             sender_socket.send(
@@ -148,7 +148,7 @@ class ChatServer:
             username = self.clients[client_socket]
             print(f" >> {username} has left the chat.")
             self.broadcast(
-                f"{info_prefix} {username} has left the chat.", client_socket
+                f"{self.info_prefix} {username} has left the chat.", client_socket
             )
             del self.clients[client_socket]
         if client_socket in self.input_list:
@@ -156,7 +156,7 @@ class ChatServer:
             client_socket.close()
 
     def shutdown(self):
-        self.broadcast(f"{error_prefix} Server is shutting down.", None)
+        self.broadcast(f"{self.error_prefix} Server is shutting down.", None)
         for client_socket in self.clients:
             client_socket.close()
         self.server_socket.close()
