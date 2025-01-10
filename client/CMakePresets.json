@@ -1,0 +1,45 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "clang-debug",
+            "displayName": "Clang 18.1.8 x86_64-pc-linux-gnu Debug",
+            "description": "Using compilers: C = clang, CXX = clang++",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "clang-build-release",
+            "displayName": "Clang 18.1.8 x86_64-pc-linux-gnu Release",
+            "description": "Using compilers: C = clang, CXX = clang++",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "clang-build-debug",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "clang-debug"
+        },
+        {
+            "name": "clang-build-release",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "clang-build-release"
+        }
+    ]
+}
