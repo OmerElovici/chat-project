@@ -57,7 +57,7 @@ class ChatServer:
 
             while username in self.clients.values():
                 client_socket.send(
-                    "Username already taken. Please choose another: ".encode()
+                    "!! Username already taken. Please choose another: ".encode()
                 )
                 username = client_socket.recv(1024).decode().strip()
                 if not username:
@@ -110,12 +110,16 @@ class ChatServer:
                     break
 
             if recipient_socket:
-                print(f" >> dm from {self.clients[sender_socket]}): {message}")
+                print(
+                    f" >> dm from {self.clients[sender_socket]} to {self.clients[recipient_socket]}: {message}"
+                )
                 recipient_socket.send(
                     f"(-- Recieved direct message from {self.clients[sender_socket]}): {message}".encode()
                 )
             else:
-                sender_socket.send(f"User '{recipient_username}' not found.".encode())
+                sender_socket.send(
+                    f"!! User '{recipient_username}' not found.".encode()
+                )
         except IndexError:
             sender_socket.send(
                 "!! Invalid private message format. Use /dm <username> <message>".encode()
@@ -141,7 +145,7 @@ class ChatServer:
             client_socket.close()
 
     def shutdown(self):
-        self.broadcast("Server is shutting down.", None)
+        self.broadcast("!! Server is shutting down.", None)
         for client_socket in self.clients:
             client_socket.close()
         self.server_socket.close()
