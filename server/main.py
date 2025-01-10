@@ -89,11 +89,6 @@ class ChatServer:
                     response = "++" + separator.join(map(str, connected_clients))
                     print(f" >> '{user}' asked for user list ( {response} )")
                     client_socket.send(response.encode())
-                else:
-                    print(f" >> {user} sent: {message}")
-                    self.broadcast(
-                        f"{self.clients[client_socket]}: {message}", client_socket
-                    )
             else:
                 self.remove_client(client_socket)
         except (ConnectionResetError, BrokenPipeError):
