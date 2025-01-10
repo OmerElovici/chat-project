@@ -156,7 +156,7 @@ class ChatServer:
             client_socket.close()
 
     def shutdown(self):
-        self.broadcast(f"{self.error_prefix} Server is shutting down.", None)
+        self.broadcast(f"{self.info_prefix} Server is shutting down.", None)
         for client_socket in self.clients:
             client_socket.close()
         self.server_socket.close()
