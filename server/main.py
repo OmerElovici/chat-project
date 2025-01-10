@@ -127,7 +127,7 @@ class ChatServer:
                 )
             else:
                 sender_socket.send(
-                    f"{self.error_prefix} User '{recipient_username}' not found.".encode()
+                    f"{self.error_prefix} User '{recipient_username}' not found".encode()
                 )
         except IndexError:
             sender_socket.send(
