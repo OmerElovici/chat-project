@@ -131,7 +131,7 @@ class ChatServer:
                 )
         except IndexError:
             sender_socket.send(
-                "!! Invalid private message format. Use /dm <username> <message>".encode()
+                f"{self.error_prefix} Invalid private message format. Use /dm <username> <message>".encode()
             )
 
     def broadcast(self, message, sender_socket):
