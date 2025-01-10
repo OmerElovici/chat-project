@@ -55,7 +55,6 @@ class ChatServer:
         self.input_list.append(client_socket)
 
         try:
-            client_socket.send("Enter your username: ".encode())
             username = client_socket.recv(1024).decode().strip()
             if not username:  # Handle empty username (client disconnected)
                 self.remove_client(client_socket)
