@@ -36,16 +36,17 @@ constexpr const auto kBufferSize = 1024;
 constexpr const auto kGetUsersCommand = "/users";
 constexpr const auto kQuitCommand = "/quit";
 constexpr const auto kDmCommand = "/dm";
+constexpr const auto kBroadcastCommand = "/b";
 
 constexpr const auto kPrivateMsgPrefix = "--";
 constexpr const auto kServerErrorPrefix = "!!";
 constexpr const auto kGetUsersPrefix = "++";
 constexpr const auto kServerInfoPrefix = "ii";
 constexpr const auto kUserNameTaken = "4";
+constexpr const auto kSuccess = "200";
 
 static void print_users(std::string& users_messeges_buffer) {
     users_messeges_buffer.erase(0, strlen(kGetUsersPrefix));
-    std::cout << users_messeges_buffer << "\n";
     std::string_view buffer(users_messeges_buffer);
 
     for (const auto& part : buffer | std::ranges::views::split(':')) {
@@ -78,6 +79,7 @@ static int server_messages_handler(std::string& server_message) {
         return -1;
     }
     else if (server_message.starts_with(kUserNameTaken)) { return -1; }
+    else if (server_message.starts_with(kSuccess)) { return 0; }
     return 0;
 }
 
@@ -85,16 +87,16 @@ static void client_menu(socket_t client_socket_file_descriptor) {
     std::array<char, kBufferSize> rx_buffer{};
     std::string input;
     std::cout << "Welcome to chat!\n";
-    std::cout << "To get list of chatters, enter : " << kGetUsersCommand << "\n";
+    std::cout << "To get list of users, enter : " << kGetUsersCommand << "\n";
     std::cout << "To quit the program, enter :  " << kQuitCommand << "\n";
     std::cout << "To send message to user enter: " << kDmCommand << " <user> <msg>\n";
+    std::cout << "To send broadcast message to all users enter: " << kBroadcastCommand << " <msg>\n";
     std::cout << "--------------------------------" << "\n";
     for (;;) {
         std::getline(std::cin, input);
 
         if (input == kGetUsersCommand) { send_command(client_socket_file_descriptor, kGetUsersCommand); }
-        else if (input.starts_with(kDmCommand)) {
-            std::string_view view(input);
+        else if (input.starts_with(kDmCommand) || input.starts_with(kBroadcastCommand)) {
             send_msg(client_socket_file_descriptor, input);
         }
         else if (input == kQuitCommand) {
@@ -140,15 +142,18 @@ int main(int /*unused*/, char** /*unused*/) {
 
     std::string input;
     std::array<char, kBufferSize> recieve_buffer{};
-    auto response = 0;
-    while (response >= 0) {
+    auto response = -1;
+    while (response < 0) {
         std::cout << "Enter your userame to server: " << "\n";
         std::getline(std::cin, input);
         if (input.length() > 0) {
             send_msg(client_socket_file_descriptor, input);
             auto recieved_bytes = recv(client_socket_file_descriptor, recieve_buffer.data(), recieve_buffer.size(), 0);
             std::string recv_msg = recieve_buffer.data();
-            if (recieved_bytes > 0) { response = server_messages_handler(recv_msg); }
+            if (recieved_bytes > 0) {
+                response = server_messages_handler(recv_msg);
+                if (response == -1) { std::cout << "Name already exist! please enter another one" << "\n"; }
+            }
         }
     }
 

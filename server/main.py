@@ -72,9 +72,9 @@ class ChatServer:
             self.clients[client_socket] = username
             print(f" >> {username} has joined the chat room")
             client_socket.send(ServerStatusCode.SUCCESS.value.encode())
-            self.broadcast(
-                f"{self.info_prefix} {username} has joined the chat!", client_socket
-            )
+            # self.broadcast(
+            #     f"{self.info_prefix} {username} has joined the chat!", client_socket
+            # )
 
         except (ConnectionResetError, BrokenPipeError):
             print(f" >> Client {client_address} disconnected during username setup")
