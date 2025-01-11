@@ -38,10 +38,10 @@ constexpr const auto kPrivateMsgPrefix = "--";
 constexpr const auto kServerErrorPrefix = "!!";
 constexpr const auto kGetUsersPrefix = "++";
 constexpr const auto kServerInfoPrefix = "ii";
-
+constexpr const auto kSuccessResponsePrefix = "200";
 
 static void print_users(std::string& users_messeges_buffer) {
-    users_messeges_buffer.erase(0,strlen(kGetUsersPrefix));
+    users_messeges_buffer.erase(0, strlen(kGetUsersPrefix));
     std::cout << users_messeges_buffer << "\n";
     std::string_view buffer(users_messeges_buffer);
 
@@ -64,6 +64,7 @@ static void send_command(socket_t client_socket_file_descriptor, const char* com
 
 
 static int server_messages_handler(std::string& server_message) {
+
     if (server_message.starts_with(kPrivateMsgPrefix)) {
         std::cout << " ";
         std::cout << server_message << "\n";
@@ -71,8 +72,8 @@ static int server_messages_handler(std::string& server_message) {
     else if (server_message.starts_with(kGetUsersPrefix)) { print_users(server_message); }
     else if (server_message.starts_with(kServerErrorPrefix)) {
         std::cout << "Server error: " << server_message << "\n";
-        return -1;
     }
+    else if (server_message.starts_with(kSuccessResponsePrefix)) { return 0; }
     return 0;
 }
 
@@ -140,11 +141,9 @@ int main(int /*unused*/, char** /*unused*/) {
         std::getline(std::cin, input);
         if (input.length() > 0) {
             send_msg(client_socket_file_descriptor, input);
-            response = 0;
-            // auto recieved_bytes =
-            // recv(client_socket_file_descriptor, recieve_buffer.data(), recieve_buffer.size(), 0);
-            // std::string recv_msg = recieve_buffer.data();
-            // if (recieved_bytes > 0) { response = server_messages_handler(recv_msg); }
+            auto recieved_bytes = recv(client_socket_file_descriptor, recieve_buffer.data(), recieve_buffer.size(), 0);
+            std::string recv_msg = recieve_buffer.data();
+            if (recieved_bytes > 0) { response = server_messages_handler(recv_msg); }
         }
     }
 
