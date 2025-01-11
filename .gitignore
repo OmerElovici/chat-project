@@ -34,3 +34,5 @@
 # build output
 client/build/
 client/out/
+
+.vscode/
