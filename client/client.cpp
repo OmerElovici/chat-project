@@ -10,6 +10,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 #include <winsock2.h>
 #include <ws2tcpip.h>
+
 using socket_t = SOCKET;
 constexpr static void close_socket(socket_t sock) { closesocket(sock); }
 static void init_win_socket() {
@@ -23,6 +24,8 @@ static void init_win_socket() {
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+using socket_t = int;
 constexpr static void close_socket(socket_t sock) { close(sock); }
 #endif
 
@@ -38,7 +41,7 @@ constexpr const auto kPrivateMsgPrefix = "--";
 constexpr const auto kServerErrorPrefix = "!!";
 constexpr const auto kGetUsersPrefix = "++";
 constexpr const auto kServerInfoPrefix = "ii";
-constexpr const auto kSuccessResponsePrefix = "200";
+constexpr const auto kUserNameTaken = "4";
 
 static void print_users(std::string& users_messeges_buffer) {
     users_messeges_buffer.erase(0, strlen(kGetUsersPrefix));
@@ -72,8 +75,9 @@ static int server_messages_handler(std::string& server_message) {
     else if (server_message.starts_with(kGetUsersPrefix)) { print_users(server_message); }
     else if (server_message.starts_with(kServerErrorPrefix)) {
         std::cout << "Server error: " << server_message << "\n";
+        return -1;
     }
-    else if (server_message.starts_with(kSuccessResponsePrefix)) { return 0; }
+    else if (server_message.starts_with(kUserNameTaken)) { return -1; }
     return 0;
 }
 
@@ -87,6 +91,7 @@ static void client_menu(socket_t client_socket_file_descriptor) {
     std::cout << "--------------------------------" << "\n";
     for (;;) {
         std::getline(std::cin, input);
+
         if (input == kGetUsersCommand) { send_command(client_socket_file_descriptor, kGetUsersCommand); }
         else if (input.starts_with(kDmCommand)) {
             std::string_view view(input);
@@ -135,8 +140,8 @@ int main(int /*unused*/, char** /*unused*/) {
 
     std::string input;
     std::array<char, kBufferSize> recieve_buffer{};
-    auto response = -1;
-    while (response == -1) {
+    auto response = 0;
+    while (response >= 0) {
         std::cout << "Enter your userame to server: " << "\n";
         std::getline(std::cin, input);
         if (input.length() > 0) {
