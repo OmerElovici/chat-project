@@ -3,6 +3,8 @@ import threading
 import select
 import sys
 
+from .status_codes import ServerStatusCode
+
 
 class ChatServer:
 
@@ -61,9 +63,7 @@ class ChatServer:
                 return
 
             while username in self.clients.values():
-                client_socket.send(
-                    f"{self.error_prefix} Username already taken. Please choose another: ".encode()
-                )
+                client_socket.send(ServerStatusCode.USERNAME_TAKEN.encode())
                 username = client_socket.recv(1024).decode().strip()
                 if not username:
                     self.remove_client(client_socket)
@@ -71,7 +71,7 @@ class ChatServer:
 
             self.clients[client_socket] = username
             print(f" >> {username} has joined the chat room")
-            client_socket.send("200".encode())
+            client_socket.send(ServerStatusCode.SUCCESS.encode())
             self.broadcast(
                 f"{self.info_prefix} {username} has joined the chat!", client_socket
             )
@@ -130,13 +130,9 @@ class ChatServer:
                     f"{self.msg_prefix} Recieved direct message from {self.clients[sender_socket]}: {message}".encode()
                 )
             else:
-                sender_socket.send(
-                    f"{self.error_prefix} User '{recipient_username}' not found".encode()
-                )
+                sender_socket.send(ServerStatusCode.USER_NOT_FOUND.encode())
         except IndexError:
-            sender_socket.send(
-                f"{self.error_prefix} Invalid private message format. Use /dm <username> <message>".encode()
-            )
+            sender_socket.send(ServerStatusCode.INVALID_MESSAGE_FORMAT.encode())
 
     def broadcast(self, message, sender_socket):
 
