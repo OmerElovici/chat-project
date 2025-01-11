@@ -36,3 +36,5 @@ client/build/
 client/out/
 
 .vscode/
+
+__pycache__
