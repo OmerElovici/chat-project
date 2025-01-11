@@ -3,7 +3,7 @@ import threading
 import select
 import sys
 
-from .status_codes import ServerStatusCode
+from status_codes import ServerStatusCode
 
 
 class ChatServer:
