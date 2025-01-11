@@ -138,7 +138,7 @@ class ChatServer:
 
         if message.startswith("/b"):
             message = f"{self.msg_prefix} Recieved broadcast message from {self.clients[sender_socket]}: {message[3:]}"
-        print(f"Broadcasting: {message}")
+        print(f" >> Broadcasting: {message}")
         for client_socket in self.clients:
             if client_socket != sender_socket:
                 try:
