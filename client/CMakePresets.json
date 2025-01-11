@@ -8,7 +8,7 @@
             "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/build",
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_BUILD_TYPE": "Debug"
@@ -26,6 +26,19 @@
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "clang-windows-debug",
+            "displayName": "Clang 19.1.6 x86_64-pc-windows-msvc",
+            "description": "Using compilers: C = C:\\Users\\omere\\OneDrive\\Desktop\\clang+llvm-19.1.6-x86_64-pc-windows-msvc\\bin\\clang.exe, CXX = C:\\Users\\omere\\OneDrive\\Desktop\\clang+llvm-19.1.6-x86_64-pc-windows-msvc\\bin\\clang++.exe",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/out/build",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "C:/Users/omere/OneDrive/Desktop/clang+llvm-19.1.6-x86_64-pc-windows-msvc/bin/clang.exe",
+                "CMAKE_CXX_COMPILER": "C:/Users/omere/OneDrive/Desktop/clang+llvm-19.1.6-x86_64-pc-windows-msvc/bin/clang++.exe",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
         }
     ],
     "buildPresets": [
@@ -40,6 +53,12 @@
             "description": "",
             "displayName": "",
             "configurePreset": "clang-build-release"
+        },
+        {
+            "name": "clang-windows-build-debug",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "clang-windows-debug"
         }
     ]
 }

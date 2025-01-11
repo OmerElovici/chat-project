@@ -1,17 +1,29 @@
 #include <array>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <ranges>
+#include <string>
 #include <string_view>
 #include <thread>
-#include <unistd.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
+#pragma comment(lib, "Ws2_32.lib")
 #include <winsock2.h>
+#include <ws2tcpip.h>
+using socket_t = SOCKET;
+constexpr static void close_socket(socket_t sock) { closesocket(sock); }
+static void init_win_socket() {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cout << "WSAStartup failed\n";
+        std::quick_exit(EXIT_FAILURE);
+    }
+}
 #else
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <unistd.h>
+constexpr static void close_socket(socket_t sock) { close(sock); }
 #endif
 
 constexpr const auto kServerPort = 8080;
@@ -28,8 +40,9 @@ constexpr const auto kGetUsersPrefix = "++";
 constexpr const auto kServerInfoPrefix = "ii";
 
 
-void print_users(std::string& users_messeges_buffer) {
-
+static void print_users(std::string& users_messeges_buffer) {
+    users_messeges_buffer.erase(0,strlen(kGetUsersPrefix));
+    std::cout << users_messeges_buffer << "\n";
     std::string_view buffer(users_messeges_buffer);
 
     for (const auto& part : buffer | std::ranges::views::split(':')) {
@@ -37,22 +50,33 @@ void print_users(std::string& users_messeges_buffer) {
     }
 }
 
-auto send_msg(int client_socket_file_descriptor, std::string& msg) {
 
-    ssize_t bytes_sent = send(client_socket_file_descriptor, msg.c_str(), msg.size(), 0);
-    if (bytes_sent > 0) { std::cout << "Sent: " << msg << " (" << bytes_sent << " bytes)\n"; }
-    else { std::cerr << "Error in send\n"; }
+static void send_msg(socket_t client_socket_file_descriptor, std::string& msg) {
+    auto bytes_sent = send(client_socket_file_descriptor, msg.data(), static_cast<int>(msg.length()), 0);
+    if (bytes_sent > 0) { std::cout << "Sent: " << msg << "\n"; }
+    else { std::cout << "Failed to send:" << msg << "\n"; }
+}
+static void send_command(socket_t client_socket_file_descriptor, const char* command) {
+    auto bytes_sent = send(client_socket_file_descriptor, command, sizeof(command), 0);
+    if (bytes_sent > 0) { std::cout << "Sent: " << command << "\n"; }
+    else { std::cout << "Failed to send:" << command << "\n"; }
 }
 
-void server_messages_handler(std::string& server_message) {
-    if (server_message.starts_with(kPrivateMsgPrefix)) { std::cout << server_message << "\n"; }
+
+static int server_messages_handler(std::string& server_message) {
+    if (server_message.starts_with(kPrivateMsgPrefix)) {
+        std::cout << " ";
+        std::cout << server_message << "\n";
+    }
     else if (server_message.starts_with(kGetUsersPrefix)) { print_users(server_message); }
     else if (server_message.starts_with(kServerErrorPrefix)) {
         std::cout << "Server error: " << server_message << "\n";
+        return -1;
     }
+    return 0;
 }
 
-void client_menu(int& client_socket_file_descriptor) {
+static void client_menu(socket_t client_socket_file_descriptor) {
     std::array<char, kBufferSize> rx_buffer{};
     std::string input;
     std::cout << "Welcome to chat!\n";
@@ -62,40 +86,38 @@ void client_menu(int& client_socket_file_descriptor) {
     std::cout << "--------------------------------" << "\n";
     for (;;) {
         std::getline(std::cin, input);
-        if (input == kGetUsersCommand) {
-            auto bytes_sent = send(client_socket_file_descriptor, kGetUsersCommand, strlen(kGetUsersCommand), 0);
-            if (bytes_sent <= 0) { std::cout << "Failed to get users from server\n"; }
-        }
+        if (input == kGetUsersCommand) { send_command(client_socket_file_descriptor, kGetUsersCommand); }
         else if (input.starts_with(kDmCommand)) {
             std::string_view view(input);
-            auto sent_bytes = send(client_socket_file_descriptor, view.data(), view.size(), 0);
+            send_msg(client_socket_file_descriptor, input);
         }
         else if (input == kQuitCommand) {
-            auto bytes_sent = send(client_socket_file_descriptor, kQuitCommand, strlen(kQuitCommand), 0);
+            send_command(client_socket_file_descriptor, kQuitCommand);
             std::quick_exit(EXIT_SUCCESS);
         }
     }
 }
 
 int main(int /*unused*/, char** /*unused*/) {
-
+#ifdef _WIN32
+    init_win_socket();
+#endif
     // Create socket file descriptor
     auto client_socket_file_descriptor = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket_file_descriptor < 0) {
         std::cout << "Failed to create socket file descriptor\n";
         std::quick_exit(EXIT_FAILURE);
     }
+#ifdef _WIN32
+#endif
 
-
-    struct sockaddr_in server_address {
-        AF_INET, htons(kServerPort)
-    };
+    struct sockaddr_in server_address{ .sin_family = AF_INET, .sin_port = htons(kServerPort) };
 
     // Convert server address to network binary represantaion
     auto convesion_result = inet_pton(server_address.sin_family, kServerAddress, &server_address.sin_addr);
     if (convesion_result <= 0) {
-        perror("Invalid server address");
-        close(client_socket_file_descriptor);
+        std::cout << "Invalid server address\n";
+        close_socket(client_socket_file_descriptor);
         std::quick_exit(EXIT_FAILURE);
     }
 
@@ -103,17 +125,28 @@ int main(int /*unused*/, char** /*unused*/) {
     auto connection_result = connect(
       client_socket_file_descriptor, reinterpret_cast<struct sockaddr*>(&server_address), sizeof(server_address));
     if (connection_result < 0) {
-        perror("Failed to connect to server");
-        close(client_socket_file_descriptor);
-        return EXIT_FAILURE;
+        std::cout << "Failed to connect to server\n";
+        close_socket(client_socket_file_descriptor);
+        std::quick_exit(EXIT_FAILURE);
     }
 
     std::cout << "Connected to the server\n";
 
     std::string input;
-    std::cout << "Enter your userame to server: " << "\n";
-    std::cin >> input;
-    send_msg(client_socket_file_descriptor, input);
+    std::array<char, kBufferSize> recieve_buffer{};
+    auto response = -1;
+    while (response == -1) {
+        std::cout << "Enter your userame to server: " << "\n";
+        std::getline(std::cin, input);
+        if (input.length() > 0) {
+            send_msg(client_socket_file_descriptor, input);
+            response = 0;
+            // auto recieved_bytes =
+            // recv(client_socket_file_descriptor, recieve_buffer.data(), recieve_buffer.size(), 0);
+            // std::string recv_msg = recieve_buffer.data();
+            // if (recieved_bytes > 0) { response = server_messages_handler(recv_msg); }
+        }
+    }
 
     std::jthread receive_loop([client_socket_file_descriptor] {
         std::array<char, kBufferSize> msg{};
