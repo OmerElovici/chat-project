@@ -31,13 +31,12 @@
             "name": "clang-windows-debug",
             "displayName": "Clang 19.1.6 x86_64-pc-windows-msvc",
             "description": "Using compilers: C = C:\\Users\\omere\\OneDrive\\Desktop\\clang+llvm-19.1.6-x86_64-pc-windows-msvc\\bin\\clang.exe, CXX = C:\\Users\\omere\\OneDrive\\Desktop\\clang+llvm-19.1.6-x86_64-pc-windows-msvc\\bin\\clang++.exe",
-            "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/build",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "C:/Users/omere/OneDrive/Desktop/clang+llvm-19.1.6-x86_64-pc-windows-msvc/bin/clang.exe",
                 "CMAKE_CXX_COMPILER": "C:/Users/omere/OneDrive/Desktop/clang+llvm-19.1.6-x86_64-pc-windows-msvc/bin/clang++.exe",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Release"
             }
         }
     ],

@@ -12,7 +12,7 @@
 #include <ws2tcpip.h>
 
 using socket_t = SOCKET;
-constexpr static void close_socket(socket_t sock) { closesocket(sock); }
+static void close_socket(socket_t sock) { closesocket(sock); }
 static void init_win_socket() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
