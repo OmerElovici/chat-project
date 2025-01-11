@@ -56,7 +56,7 @@ class ChatServer:
 
         try:
             username = client_socket.recv(1024).decode().strip()
-            if not username:  # Handle empty username (client disconnected)
+            if not username:
                 self.remove_client(client_socket)
                 return
 
@@ -90,6 +90,9 @@ class ChatServer:
                     self.remove_client(client_socket)
                 elif message.lower().startswith("/dm"):
                     self.handle_direct_message(client_socket, message)
+                elif message.lower().startswith("/b"):
+                    print(f" >> {user} sent broadcast messege: {message}")
+                    self.broadcast(message, client_socket)
                 elif message.lower().startswith("/users"):
                     connected_clients = self.clients.values()
                     separator = ":"
@@ -135,12 +138,18 @@ class ChatServer:
             )
 
     def broadcast(self, message, sender_socket):
+
+        if message.startswith("/b"):
+            message = f"{self.msg_prefix} Recieved broadcast message from {self.clients[sender_socket]}: {message[3:]}"
+        print(f"Broadcasting: {message}")
         for client_socket in self.clients:
             if client_socket != sender_socket:
                 try:
                     client_socket.send(message.encode())
                 except (ConnectionResetError, BrokenPipeError):
-                    print(f"Failed to send message to {self.clients[client_socket]}.")
+                    print(
+                        f" >> Failed to broadcast message to {self.clients[client_socket]}."
+                    )
                     self.remove_client(client_socket)
 
     def remove_client(self, client_socket):
